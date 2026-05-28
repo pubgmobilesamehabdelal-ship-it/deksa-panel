@@ -105,6 +105,12 @@
         .btn-submit:hover {
             background-color: #ff6a00;
         }
+        .hint {
+            font-size: 12px;
+            color: #ffaa00;
+            margin-top: 5px;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -115,14 +121,9 @@
     <!-- الأقسام المتوفرة للوكيل -->
     <div id="stock-panel">
         <div class="info-box">
-            <span>🪙 مخزون الكوينز:</span>
-            <span id="coins-display">0</span>
+            <span>🪙 مخزون الكوينز الحلي:</span>
+            <span id="coins-display">3,700,000</span>
         </div>
-        <div class="info-box">
-            <span>⭐ باقات VIP 1 المتوفرة:</span>
-            <span id="vip1-display">0</span>
-        </div>
-        <!-- سيتم جرد الباقي برمجياً -->
     </div>
 
     <!-- أزرار الفصل بين الشحن والترحيبات -->
@@ -131,7 +132,7 @@
         <button class="tab-btn" onclick="switchTab('tarheeb-tab')">الترحيبات</button>
     </div>
 
-    <!-- ================= قسم الشحن ================= -->
+    <!-- ================= قسم الشحن (كامل الحرية) ================= -->
     <div id="shahan-tab" class="tab-content active">
         <div class="input-group">
             <label>ادخل ID المستخدم:</label>
@@ -139,13 +140,15 @@
         </div>
         
         <div class="input-group">
-            <label>اختر عدد الكوينزات والمبلغ:</label>
-            <select id="coins-package">
-                <option value="100000_10">100,000 كوينز - بقيمة 10$</option>
-                <option value="500000_45">500,000 كوينز - بقيمة 45$</option>
-                <option value="1000000_80">1,000,000 كوينز - بقيمة 80$</option>
-                <option value="3700000_250">3,700,000 كوينز - بقيمة 250$</option>
-            </select>
+            <label>عدد الكوينزات المراد شحنها:</label>
+            <input type="number" id="coins-input" placeholder="مثال: 3500">
+            <span class="hint">* الحد الأدنى للشحن هو 3500 كوينز</span>
+        </div>
+
+        <div class="input-group">
+            <label>المبلغ المطلوب ($):</label>
+            <input type="number" id="price-input" placeholder="مثال: 1" step="0.01">
+            <span class="hint">* الحد الأدنى للمبلغ هو 1$</span>
         </div>
         
         <button class="btn-submit" onclick="processShipping()">اشحن للمستخدم الآن</button>
@@ -175,7 +178,6 @@
 </div>
 
 <script>
-    // التنقل بين الأقسام
     function switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -184,17 +186,26 @@
         event.currentTarget.classList.add('active');
     }
 
-    // هنا تضع أكواد جلب البيانات من Firebase وتحديث الـ العدادات كما فعلنا سابقاً
-    // هذا التحديث مخصص لضبط الواجهة بالشكل المطلوب تماماً من قبلك!
-
     function processShipping() {
         const userId = document.getElementById('shahan-id').value;
-        const packageSelected = document.getElementById('coins-package').value;
+        const coins = parseInt(document.getElementById('coins-input').value);
+        const price = parseFloat(document.getElementById('price-input').value);
+
         if(!userId) {
-            alert('يرجى إدخال ID المستخدم أولاً شحن!');
+            alert('يرجى إدخال ID المستخدم أولاً!');
             return;
         }
-        alert('تم إرسال طلب الشحن لـ ID: ' + userId + ' بنجاح!');
+        if(isNaN(coins) || coins < 3500) {
+            alert('خطأ: أقل كمية شحن مسموح بها هي 3500 كوينز!');
+            return;
+        }
+        if(isNaN(price) || price < 1) {
+            alert('خطأ: أدنى مبلغ شحن مسموح به هو 1$!');
+            return;
+        }
+
+        // إذا تخطى الشروط يتم الشحن بحرية كاملة
+        alert('تم بنجاح طلب شحن ' + coins + ' كوينز بقيمة ' + price + '$ للحساب ID: ' + userId);
     }
 
     function processWelcome() {
@@ -204,7 +215,7 @@
             alert('يرجى إدخال ID المستخدم لتفعيل الترحيب!');
             return;
         }
-        alert('تم تفعيل ' + vipSelected + ' للمستخدم ' + userId + ' لمدة 7 أيام بنجاح!');
+        alert('تم تفعيل ' + vipSelected + ' للمتصفح ID: ' + userId + ' لمدة 7 أيام بنجاح!');
     }
 </script>
 </body>
