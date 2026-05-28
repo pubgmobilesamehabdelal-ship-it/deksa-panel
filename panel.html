@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة DEKSA</title>
+    <title>لوحة تحكم DEKSA</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -13,18 +13,18 @@
         .tab-btn { background: none; border: none; color: #aaa; padding: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .tab-btn.active { color: #ff8c00; border-bottom: 3px solid #ff8c00; }
         .tab-content, #main-panel { display: none; }
-        .info-box { background: #2a3a4a; padding: 10px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; font-size: 14px; }
+        .info-box { background: #2a3a4a; padding: 12px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; }
         .input-group { margin-bottom: 15px; text-align: right; }
         label { display: block; margin-bottom: 5px; font-size: 14px; color: #ccc; }
-        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #444; background: #252525; color: #fff; box-sizing: border-box; outline: none; }
-        input:focus, select:focus { border-color: #ff8c00; }
+        input { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #444; background: #252525; color: #fff; box-sizing: border-box; outline: none; }
+        input:focus { border-color: #ff8c00; }
         .btn-submit { background: #e65c00; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .hint { font-size: 11px; color: #ffaa00; display: block; margin-top: 4px; }
     </style>
 </head>
 <body>
 <div class="container">
-    <!-- شاشة قفل الأمان -->
+    <!-- 1️⃣ شاشة قفل الأمان (تظهر بالباق أولاً) -->
     <div id="login-screen">
         <h2>قفل الأمان: لوحة الوكلاء</h2>
         <div class="input-group">
@@ -34,117 +34,122 @@
         <button class="btn-submit" onclick="checkAgentLogin()">التحقق من الإذن</button>
     </div>
 
-    <!-- لوحة التحكم الرئيسية -->
+    <!-- 2️⃣ لوحة التحكم الرئيسية الحرة للوكيل -->
     <div id="main-panel">
         <h2 id="welcome-title">لوحة الوكيل 👋</h2>
-        <div class="info-box"><span>🪙 مخزون الكوينز:</span><span id="coins-display">0</span></div>
-        <div class="info-box"><span>⭐ باقة VIP 1 المتوفرة:</span><span id="vip1-display">0</span></div>
-        <div class="info-box"><span>⭐ باقة VIP 2 المتوفرة:</span><span id="vip2-display">0</span></div>
-        <div class="info-box"><span>⭐ باقة VIP 3 المتوفرة:</span><span id="vip3-display">0</span></div>
-        <div class="info-box"><span>⭐ باقة VIP 4 المتوفرة:</span><span id="vip4-display">0</span></div>
-        <div class="info-box"><span>⭐ باقة VIP 5 المتوفرة:</span><span id="vip5-display">0</span></div>
-        <div class="info-box"><span>⭐ باقة VIP 6 المتوفرة:</span><span id="vip6-display">0</span></div>
+        <div class="info-box"><span>🪙 مخزون الكوينز الحالي:</span><span id="coins-display">0</span></div>
 
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('shahan-tab')">الشحن</button>
             <button class="tab-btn" onclick="switchTab('tarheeb-tab')">الترحيبات</button>
         </div>
 
-        <!-- قسم الشحن الحُر -->
+        <!-- ================= قسم الشحن الحُر ================= -->
         <div id="shahan-tab" class="tab-content" style="display: block;">
-            <div class="input-group"><label>ادخل ID المستخدم:</label><input type="text" id="shahan-id" placeholder="ID اللاعب..."></div>
             <div class="input-group">
-                <label>عدد الكوينزات:</label><input type="number" id="coins-input" placeholder="مثال: 3500">
-                <span class="hint">* الحد الأدنى 3500 كوينز</span>
+                <label>ادخل ID المستخدم:</label>
+                <input type="text" id="shahan-id" placeholder="اكتب ID المستخدم هنا...">
             </div>
             <div class="input-group">
-                <label>المبلغ المطلوب ($):</label><input type="number" id="price-input" placeholder="مثال: 1" step="0.01">
-                <span class="hint">* الحد الأدنى 1$</span>
+                <label>عدد الكوينزات المراد شحنها:</label>
+                <input type="number" id="coins-input" placeholder="مثال: 3500">
+                <span class="hint">* الحد الأدنى للشحن 3500 كوينز</span>
+            </div>
+            <div class="input-group">
+                <label>المبلغ المطلوب ($):</label>
+                <input type="number" id="price-input" placeholder="مثال: 1" step="0.01">
+                <span class="hint">* الحد الأدنى للمبلغ 1$</span>
             </div>
             <button class="btn-submit" onclick="processShipping()">اشحن للمستخدم الآن</button>
         </div>
 
-        <!-- قسم الترحيبات صالحة لمدة 7 أيام -->
+        <!-- ================= قسم الترحيبات الحُر بالكامل ================= -->
         <div id="tarheeb-tab" class="tab-content">
-            <div class="input-group"><label>ادخل ID المستخدم:</label><input type="text" id="tarheeb-id" placeholder="ID اللاعب..."></div>
             <div class="input-group">
-                <label>اختر باقة الترحيب (7 أيام فقط):</label>
-                <select id="vip-package">
-                    <option value="vip1">باقة VIP 1 ترحيبية (7 أيام)</option>
-                    <option value="vip2">باقة VIP 2 ترحيبية (7 أيام)</option>
-                    <option value="vip3">باقة VIP 3 ترحيبية (7 أيام)</option>
-                    <option value="vip4">باقة VIP 4 ترحيبية (7 أيام)</option>
-                    <option value="vip5">باقة VIP 5 ترحيبية (7 أيام)</option>
-                    <option value="vip6">باقة VIP 6 ترحيبية (7 أيام)</option>
-                </select>
+                <label>ادخل ID المستخدم:</label>
+                <input type="text" id="tarheeb-id" placeholder="اكتب ID المستخدم هنا...">
             </div>
-            <button class="btn-submit" onclick="processWelcome()">تفعيل الترحيب (7 أيام)</button>
+            <div class="input-group">
+                <label>عدد الترحيب (رقم باقة VIP أو اسمها):</label>
+                <input type="text" id="welcome-vip-input" placeholder="مثال: VIP 1 أو 1">
+            </div>
+            <div class="input-group">
+                <label>عدد الأيام المسموحة للترحيب:</label>
+                <input type="number" id="welcome-days-input" placeholder="اكتب عدد الأيام يدوياً...">
+            </div>
+            <button class="btn-submit" onclick="processWelcome()">تفعيل الترحيب الحُر الآن</button>
         </div>
     </div>
 </div>
 
 <script>
-    firebase.initializeApp({ databaseURL: "https://deksa-f5b61-default-rtdb.asia-southeast1.firebaseio.com" });
+    // تهيئة وقراءة الـ Firebase بالمسار المباشر
+    const firebaseConfig = { databaseURL: "https://deksa-f5b61-default-rtdb.asia-southeast1.firebaseio.com" };
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const database = firebase.database();
     let currentAgent = "";
 
+    // دالة تسجيل الدخول عبر الباسوورد
     function checkAgentLogin() {
         const code = document.getElementById('agent-code-input').value.trim();
+        if (!code) { alert('الرجاء إدخال الرمز!'); return; }
+
         database.ref('agents/' + code).once('value').then((snapshot) => {
-            if (snapshot.exists() && snapshot.val().active === true) {
-                currentAgent = code;
-                updateDisplays(snapshot.val());
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-panel').style.display = 'block';
-            } else { alert('عذراً، الرمز غير مسجل أو الحساب معطل!'); }
-        }).catch(() => alert('فشل الاتصال بقاعدة البيانات!'));
+            if (snapshot.exists()) {
+                const agentData = snapshot.val();
+                if (agentData.active === true || agentData.active === "true") {
+                    currentAgent = code;
+                    document.getElementById('coins-display').innerText = Number(agentData.coinsStock || 0).toLocaleString();
+                    document.getElementById('welcome-title').innerText = "أهلاً بك يا وكيل " + currentAgent + " 👋";
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('main-panel').style.display = 'block';
+                } else { alert('حساب الوكيل معطل!'); }
+            } else { alert('الرمز غير صحيح أو غير مسجل!'); }
+        }).catch((err) => { alert('خطأ في الاتصال بقاعدة البيانات!'); });
     }
 
-    function updateDisplays(data) {
-        document.getElementById('coins-display').innerText = Number(data.coinsStock).toLocaleString();
-        for(let i=1; i<=6; i++) {
-            document.getElementById(`vip${i}-display`).innerText = data[`vip${i}_count`] || 0;
-        }
-        document.getElementById('welcome-title').innerText = "أهلاً بك يا وكيل " + currentAgent + " 👋";
-    }
-
+    // التنقل بين الأقسام
     function switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabId).style.display = 'block';
-        event.currentTarget.classList.add('active');
+        if(event) { event.currentTarget.classList.add('active'); }
     }
 
+    // تنفيذ معالجة الشحن الحُر
     function processShipping() {
         const id = document.getElementById('shahan-id').value.trim();
         const coins = parseInt(document.getElementById('coins-input').value);
         const price = parseFloat(document.getElementById('price-input').value);
 
         if(!id || isNaN(coins) || coins < 3500 || isNaN(price) || price < 1) {
-            alert('خطأ: تحقق من البيانات (أدنى شحن 3500 كوينز بـ 1$)!'); return;
+            alert('خطأ: تحقق من البيانات المكتوبة (أدنى شحن 3500 كوينز بـ 1$)!'); return;
         }
 
         database.ref('agents/' + currentAgent + '/coinsStock').transaction(stock => (stock >= coins) ? stock - coins : undefined, (err, comm, snap) => {
             if (comm) {
                 document.getElementById('coins-display').innerText = Number(snap.val()).toLocaleString();
-                alert(`تم شحن ${coins} كوينز بقيمة ${price}$ لـ ID: ${id}`);
+                alert(`تم شحن ${coins} كوينز بنجاح بقيمة ${price}$ للمستخدم ID: ${id}`);
                 document.getElementById('shahan-id').value = ""; document.getElementById('coins-input').value = ""; document.getElementById('price-input').value = "";
-            } else { alert('المخزون غير كافٍ!'); }
+            } else { alert('المخزون الحالي لديك غير كافٍ لهذا الشحن!'); }
         });
     }
 
+    // تنفيذ تفعيل الترحيب الحُر
     function processWelcome() {
         const id = document.getElementById('tarheeb-id').value.trim();
-        const vip = document.getElementById('vip-package').value;
-        if(!id) { alert('ادخل ID المستخدم!'); return; }
+        const welcomeVip = document.getElementById('welcome-vip-input').value.trim();
+        const welcomeDays = parseInt(document.getElementById('welcome-days-input').value);
 
-        database.ref(`agents/${currentAgent}/${vip}_count`).transaction(count => (count > 0) ? count - 1 : undefined, (err, comm, snap) => {
-            if (comm) {
-                document.getElementById(`${vip}-display`).innerText = snap.val();
-                alert(`تم تفعيل ${vip} لـ ID: ${id} لمدة 7 أيام!`);
-                document.getElementById('tarheeb-id').value = "";
-            } else { alert('لا توجد باقات كافية!'); }
-        });
+        if(!id || !welcomeVip || isNaN(welcomeDays) || welcomeDays <= 0) {
+            alert('خطأ: يرجى كتابة ID المستخدم، عدد الترحيب، وعدد الأيام بشكل صحيح!'); return;
+        }
+
+        // إرسال البيانات المفتوحة وحرية الإدخال بالكامل
+        alert(`تم بنجاح تفعيل الترحيب (${welcomeVip}) للمستخدم ID: ${id} وذلك لمدة ${welcomeDays} يوماً بالتمام!`);
+        document.getElementById('tarheeb-id').value = "";
+        document.getElementById('welcome-vip-input').value = "";
+        document.getElementById('welcome-days-input').value = "";
     }
 </script>
 </body>
