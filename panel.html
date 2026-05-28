@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة شحن وكلاء DEKSA</title>
+    <!-- ربط مكتبة Firebase الأساسية -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -24,6 +27,14 @@
             width: 100%;
             max-width: 450px;
             text-align: center;
+        }
+        /* واجهة تسجيل الدخول */
+        #login-screen {
+            display: block;
+        }
+        /* الواجهة الرئيسية للوحة */
+        #main-panel {
+            display: none;
         }
         h2 {
             margin-bottom: 25px;
@@ -116,68 +127,131 @@
 <body>
 
 <div class="container">
-    <h2>أهلاً بك يا وكيل DEKSA 👋</h2>
     
-    <!-- الأقسام المتوفرة للوكيل -->
-    <div id="stock-panel">
-        <div class="info-box">
-            <span>🪙 مخزون الكوينز الحلي:</span>
-            <span id="coins-display">3,700,000</span>
+    <!-- ================= 1️⃣ شاشة قفل الأمان (تسجيل الدخول) ================= -->
+    <div id="login-screen">
+        <h2>قفل الأمان: لوحة الوكلاء</h2>
+        <div class="input-group">
+            <label>أدخل رمز الوكيل المعتمد للدخول:</label>
+            <input type="password" id="agent-code-input" placeholder="••••••••••••">
         </div>
+        <button class="btn-submit" onclick="checkAgentLogin()">التحقق من الإذن</button>
     </div>
 
-    <!-- أزرار الفصل بين الشحن والترحيبات -->
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('shahan-tab')">الشحن</button>
-        <button class="tab-btn" onclick="switchTab('tarheeb-tab')">الترحيبات</button>
-    </div>
+    <!-- ================= 2️⃣ واجهة اللوحة الرئيسية (تفتح بعد الرمز الصحيح) ================= -->
+    <div id="main-panel">
+        <h2 id="welcome-title">أهلاً بك يا وكيل DEKSA 👋</h2>
+        
+        <!-- العدادات الحية من الفيربيز -->
+        <div id="stock-panel">
+            <div class="info-box">
+                <span>🪙 مخزون الكوينز الحالي:</span>
+                <span id="coins-display">0</span>
+            </div>
+            <div class="info-box">
+                <span>⭐ باقات VIP 1 المتوفرة:</span>
+                <span id="vip1-display">0</span>
+            </div>
+            <div class="info-box">
+                <span>⭐ باقات VIP 2 المتوفرة:</span>
+                <span id="vip2-display">0</span>
+            </div>
+        </div>
 
-    <!-- ================= قسم الشحن (كامل الحرية) ================= -->
-    <div id="shahan-tab" class="tab-content active">
-        <div class="input-group">
-            <label>ادخل ID المستخدم:</label>
-            <input type="text" id="shahan-id" placeholder="اكتب ID اللاعب هنا...">
-        </div>
-        
-        <div class="input-group">
-            <label>عدد الكوينزات المراد شحنها:</label>
-            <input type="number" id="coins-input" placeholder="مثال: 3500">
-            <span class="hint">* الحد الأدنى للشحن هو 3500 كوينز</span>
+        <!-- أزرار الأقسام -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('shahan-tab')">الشحن</button>
+            <button class="tab-btn" onclick="switchTab('tarheeb-tab')">الترحيبات</button>
         </div>
 
-        <div class="input-group">
-            <label>المبلغ المطلوب ($):</label>
-            <input type="number" id="price-input" placeholder="مثال: 1" step="0.01">
-            <span class="hint">* الحد الأدنى للمبلغ هو 1$</span>
-        </div>
-        
-        <button class="btn-submit" onclick="processShipping()">اشحن للمستخدم الآن</button>
-    </div>
+        <!-- قسم الشحن (حرية كاملة) -->
+        <div id="shahan-tab" class="tab-content active">
+            <div class="input-group">
+                <label>ادخل ID المستخدم:</label>
+                <input type="text" id="shahan-id" placeholder="اكتب ID اللاعب هنا...">
+            </div>
+            
+            <div class="input-group">
+                <label>عدد الكوينزات المراد شحنها:</label>
+                <input type="number" id="coins-input" placeholder="مثال: 3500">
+                <span class="hint">* الحد الأدنى للشحن هو 3500 كوينز</span>
+            </div>
 
-    <!-- ================= قسم الترحيبات ================= -->
-    <div id="tarheeb-tab" class="tab-content">
-        <div class="input-group">
-            <label>ادخل ID المستخدم:</label>
-            <input type="text" id="tarheeb-id" placeholder="اكتب ID اللاعب هنا...">
+            <div class="input-group">
+                <label>المبلغ المطلوب ($):</label>
+                <input type="number" id="price-input" placeholder="مثال: 1" step="0.01">
+                <span class="hint">* الحد الأدنى للمبلغ هو 1$</span>
+            </div>
+            
+            <button class="btn-submit" onclick="processShipping()">اشحن للمستخدم الآن</button>
         </div>
-        
-        <div class="input-group">
-            <label>اختر باقة الترحيب (المدة: 7 أيام فقط):</label>
-            <select id="vip-package">
-                <option value="vip1">باقة VIP 1 ترحيبية (7 أيام)</option>
-                <option value="vip2">باقة VIP 2 ترحيبية (7 أيام)</option>
-                <option value="vip3">باقة VIP 3 ترحيبية (7 أيام)</option>
-                <option value="vip4">باقة VIP 4 ترحيبية (7 أيام)</option>
-                <option value="vip5">باقة VIP 5 ترحيبية (7 أيام)</option>
-                <option value="vip6">باقة VIP 6 ترحيبية (7 أيام)</option>
-            </select>
+
+        <!-- قسم الترحيبات -->
+        <div id="tarheeb-tab" class="tab-content">
+            <div class="input-group">
+                <label>ادخل ID المستخدم:</label>
+                <input type="text" id="tarheeb-id" placeholder="اكتب ID اللاعب هنا...">
+            </div>
+            
+            <div class="input-group">
+                <label>اختر باقة الترحيب (المدة: 7 أيام فقط):</label>
+                <select id="vip-package">
+                    <option value="vip1">باقة VIP 1 ترحيبية (7 أيام)</option>
+                    <option value="vip2">باقة VIP 2 ترحيبية (7 أيام)</option>
+                    <option value="vip3">باقة VIP 3 ترحيبية (7 أيام)</option>
+                    <option value="vip4">باقة VIP 4 ترحيبية (7 أيام)</option>
+                    <option value="vip5">باقة VIP 5 ترحيبية (7 أيام)</option>
+                    <option value="vip6">باقة VIP 6 ترحيبية (7 أيام)</option>
+                </select>
+            </div>
+            
+            <button class="btn-submit" onclick="processWelcome()">تفعيل الترحيب (7 أيام)</button>
         </div>
-        
-        <button class="btn-submit" onclick="processWelcome()">تفعيل الترحيب (7 أيام)</button>
     </div>
 </div>
 
 <script>
+    // إعدادات Firebase الخاصة بقاعدة بياناتك المباشرة
+    const firebaseConfig = {
+        databaseURL: "https://deksa-f5b61-default-rtdb.asia-southeast1.firebaseio.com"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    let currentAgent = "";
+
+    // وظيفة التحقق من الرمز والاتصال بقاعدة البيانات
+    function checkAgentLogin() {
+        const code = document.getElementById('agent-code-input').value.trim();
+        if(!code) {
+            alert('الرجاء إدخال الرمز السري!');
+            return;
+        }
+
+        // البحث داخل عقدة agents في الفيربيز
+        database.ref('agents/' + code).once('value').then((snapshot) => {
+            if (snapshot.exists() && snapshot.val().active === true) {
+                currentAgent = code;
+                const data = snapshot.val();
+                
+                // تحديث العدادات على الشاشة بالقيم الحقيقية
+                document.getElementById('coins-display').innerText = Number(data.coinsStock).toLocaleString();
+                document.getElementById('vip1-display').innerText = data.vip1_count || 0;
+                document.getElementById('vip2-display').innerText = data.vip2_count || 0;
+                document.getElementById('welcome-title').innerText = "أهلاً بك يا وكيل " + code + " 👋";
+
+                // التنقل بين الشاشات
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-panel').style.display = 'block';
+            } else {
+                alert('عذراً، هذا الرمز غير مسجل أو حساب الوكيل معطل!');
+            }
+        }).catch((error) => {
+            console.error(error);
+            alert('حدث خطأ أثناء الاتصال بقاعدة البيانات!');
+        });
+    }
+
     function switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -187,7 +261,7 @@
     }
 
     function processShipping() {
-        const userId = document.getElementById('shahan-id').value;
+        const userId = document.getElementById('shahan-id').value.trim();
         const coins = parseInt(document.getElementById('coins-input').value);
         const price = parseFloat(document.getElementById('price-input').value);
 
@@ -204,18 +278,51 @@
             return;
         }
 
-        // إذا تخطى الشروط يتم الشحن بحرية كاملة
-        alert('تم بنجاح طلب شحن ' + coins + ' كوينز بقيمة ' + price + '$ للحساب ID: ' + userId);
+        // خصم الكوينزات من الفيربيز وتحديث المخزون
+        database.ref('agents/' + currentAgent + '/coinsStock').transaction((currentStock) => {
+            if (currentStock >= coins) {
+                return currentStock - coins;
+            } else {
+                alert('مخزونك الحالي غير كافٍ لإتمام هذه العملية!');
+                return; // إلغاء العملية إذا كان المخزون غير كافٍ
+            }
+        }, (error, committed, snapshot) => {
+            if (committed) {
+                document.getElementById('coins-display').innerText = Number(snapshot.val()).toLocaleString();
+                alert('تم بنجاح شحن ' + coins + ' كوينز بقيمة ' + price + '$ للحساب ID: ' + userId);
+                document.getElementById('shahan-id').value = "";
+                document.getElementById('coins-input').value = "";
+                document.getElementById('price-input').value = "";
+            }
+        });
     }
 
     function processWelcome() {
-        const userId = document.getElementById('tarheeb-id').value;
+        const userId = document.getElementById('tarheeb-id').value.trim();
         const vipSelected = document.getElementById('vip-package').value;
+        const vipKey = vipSelected + "_count";
+
         if(!userId) {
             alert('يرجى إدخال ID المستخدم لتفعيل الترحيب!');
             return;
         }
-        alert('تم تفعيل ' + vipSelected + ' للمتصفح ID: ' + userId + ' لمدة 7 أيام بنجاح!');
+
+        // خصم باقة VIP من الفيربيز وتحديثها
+        database.ref('agents/' + currentAgent + '/' + vipKey).transaction((currentCount) => {
+            if (currentCount > 0) {
+                return currentCount - 1;
+            } else {
+                alert('ليس لديك باقات كافية متوفرة من هذا النوع!');
+                return;
+            }
+        }, (error, committed, snapshot) => {
+            if (committed) {
+                if(vipSelected === 'vip1') document.getElementById('vip1-display').innerText = snapshot.val();
+                if(vipSelected === 'vip2') document.getElementById('vip2-display').innerText = snapshot.val();
+                alert('تم تفعيل ' + vipSelected + ' للمستخدم ID: ' + userId + ' لمدة 7 أيام بنجاح!');
+                document.getElementById('tarheeb-id').value = "";
+            }
+        });
     }
 </script>
 </body>
