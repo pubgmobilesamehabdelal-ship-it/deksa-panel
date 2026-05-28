@@ -13,7 +13,7 @@
         .tab-btn { background: none; border: none; color: #aaa; padding: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .tab-btn.active { color: #ff8c00; border-bottom: 3px solid #ff8c00; }
         .tab-content, #main-panel { display: none; }
-        .info-box { background: #2a3a4a; padding: 12px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; }
+        .info-box { background: #2a3a4a; padding: 10px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; font-size: 14px; }
         .input-group { margin-bottom: 15px; text-align: right; }
         label { display: block; margin-bottom: 5px; font-size: 14px; color: #ccc; }
         input, select { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #444; background: #252525; color: #fff; box-sizing: border-box; outline: none; }
@@ -40,6 +40,10 @@
         <div class="info-box"><span>🪙 مخزون الكوينز:</span><span id="coins-display">0</span></div>
         <div class="info-box"><span>⭐ باقة VIP 1 المتوفرة:</span><span id="vip1-display">0</span></div>
         <div class="info-box"><span>⭐ باقة VIP 2 المتوفرة:</span><span id="vip2-display">0</span></div>
+        <div class="info-box"><span>⭐ باقة VIP 3 المتوفرة:</span><span id="vip3-display">0</span></div>
+        <div class="info-box"><span>⭐ باقة VIP 4 المتوفرة:</span><span id="vip4-display">0</span></div>
+        <div class="info-box"><span>⭐ باقة VIP 5 المتوفرة:</span><span id="vip5-display">0</span></div>
+        <div class="info-box"><span>⭐ باقة VIP 6 المتوفرة:</span><span id="vip6-display">0</span></div>
 
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('shahan-tab')">الشحن</button>
@@ -68,6 +72,10 @@
                 <select id="vip-package">
                     <option value="vip1">باقة VIP 1 ترحيبية (7 أيام)</option>
                     <option value="vip2">باقة VIP 2 ترحيبية (7 أيام)</option>
+                    <option value="vip3">باقة VIP 3 ترحيبية (7 أيام)</option>
+                    <option value="vip4">باقة VIP 4 ترحيبية (7 أيام)</option>
+                    <option value="vip5">باقة VIP 5 ترحيبية (7 أيام)</option>
+                    <option value="vip6">باقة VIP 6 ترحيبية (7 أيام)</option>
                 </select>
             </div>
             <button class="btn-submit" onclick="processWelcome()">تفعيل الترحيب (7 أيام)</button>
@@ -89,13 +97,14 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-panel').style.display = 'block';
             } else { alert('عذراً، الرمز غير مسجل أو الحساب معطل!'); }
-        });
+        }).catch(() => alert('فشل الاتصال بقاعدة البيانات!'));
     }
 
     function updateDisplays(data) {
         document.getElementById('coins-display').innerText = Number(data.coinsStock).toLocaleString();
-        document.getElementById('vip1-display').innerText = data.vip1_count || 0;
-        document.getElementById('vip2-display').innerText = data.vip2_count || 0;
+        for(let i=1; i<=6; i++) {
+            document.getElementById(`vip${i}-display`).innerText = data[`vip${i}_count`] || 0;
+        }
         document.getElementById('welcome-title').innerText = "أهلاً بك يا وكيل " + currentAgent + " 👋";
     }
 
