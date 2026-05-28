@@ -3,132 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة شحن وكلاء DEKSA</title>
-    <!-- ربط مكتبة Firebase الأساسية -->
+    <title>لوحة DEKSA</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            background-color: #1e1e1e;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            width: 100%;
-            max-width: 450px;
-            text-align: center;
-        }
-        /* واجهة تسجيل الدخول */
-        #login-screen {
-            display: block;
-        }
-        /* الواجهة الرئيسية للوحة */
-        #main-panel {
-            display: none;
-        }
-        h2 {
-            margin-bottom: 25px;
-            color: #fff;
-        }
-        .tabs {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #333;
-        }
-        .tab-btn {
-            background: none;
-            border: none;
-            color: #aaa;
-            padding: 10px 20px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .tab-btn.active {
-            color: #ff8c00;
-            border-bottom: 3px solid #ff8c00;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .info-box {
-            background-color: #2a3a4a;
-            padding: 12px;
-            margin-bottom: 12px;
-            border-radius: 8px;
-            font-size: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .input-group {
-            margin-bottom: 18px;
-            text-align: right;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            color: #ccc;
-        }
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 2px solid #444;
-            background-color: #252525;
-            color: #fff;
-            box-sizing: border-box;
-            font-size: 15px;
-            outline: none;
-        }
-        input:focus, select:focus {
-            border-color: #ff8c00;
-        }
-        .btn-submit {
-            background-color: #e65c00;
-            color: white;
-            border: none;
-            padding: 14px;
-            width: 100%;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 10px;
-        }
-        .btn-submit:hover {
-            background-color: #ff6a00;
-        }
-        .hint {
-            font-size: 12px;
-            color: #ffaa00;
-            margin-top: 5px;
-            display: block;
-        }
+        body { font-family: sans-serif; background: #121212; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background: #1e1e1e; padding: 25px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); width: 100%; max-width: 420px; text-align: center; }
+        .tabs { display: flex; justify-content: space-around; margin: 20px 0; border-bottom: 2px solid #333; }
+        .tab-btn { background: none; border: none; color: #aaa; padding: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .tab-btn.active { color: #ff8c00; border-bottom: 3px solid #ff8c00; }
+        .tab-content, #main-panel { display: none; }
+        .info-box { background: #2a3a4a; padding: 12px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; }
+        .input-group { margin-bottom: 15px; text-align: right; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; color: #ccc; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #444; background: #252525; color: #fff; box-sizing: border-box; outline: none; }
+        input:focus, select:focus { border-color: #ff8c00; }
+        .btn-submit { background: #e65c00; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .hint { font-size: 11px; color: #ffaa00; display: block; margin-top: 4px; }
     </style>
 </head>
 <body>
-
 <div class="container">
-    
-    <!-- ================= 1️⃣ شاشة قفل الأمان (تسجيل الدخول) ================= -->
+    <!-- شاشة قفل الأمان -->
     <div id="login-screen">
         <h2>قفل الأمان: لوحة الوكلاء</h2>
         <div class="input-group">
@@ -138,190 +34,107 @@
         <button class="btn-submit" onclick="checkAgentLogin()">التحقق من الإذن</button>
     </div>
 
-    <!-- ================= 2️⃣ واجهة اللوحة الرئيسية (تفتح بعد الرمز الصحيح) ================= -->
+    <!-- لوحة التحكم الرئيسية -->
     <div id="main-panel">
-        <h2 id="welcome-title">أهلاً بك يا وكيل DEKSA 👋</h2>
-        
-        <!-- العدادات الحية من الفيربيز -->
-        <div id="stock-panel">
-            <div class="info-box">
-                <span>🪙 مخزون الكوينز الحالي:</span>
-                <span id="coins-display">0</span>
-            </div>
-            <div class="info-box">
-                <span>⭐ باقات VIP 1 المتوفرة:</span>
-                <span id="vip1-display">0</span>
-            </div>
-            <div class="info-box">
-                <span>⭐ باقات VIP 2 المتوفرة:</span>
-                <span id="vip2-display">0</span>
-            </div>
-        </div>
+        <h2 id="welcome-title">لوحة الوكيل 👋</h2>
+        <div class="info-box"><span>🪙 مخزون الكوينز:</span><span id="coins-display">0</span></div>
+        <div class="info-box"><span>⭐ باقة VIP 1 المتوفرة:</span><span id="vip1-display">0</span></div>
+        <div class="info-box"><span>⭐ باقة VIP 2 المتوفرة:</span><span id="vip2-display">0</span></div>
 
-        <!-- أزرار الأقسام -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('shahan-tab')">الشحن</button>
             <button class="tab-btn" onclick="switchTab('tarheeb-tab')">الترحيبات</button>
         </div>
 
-        <!-- قسم الشحن (حرية كاملة) -->
-        <div id="shahan-tab" class="tab-content active">
+        <!-- قسم الشحن الحُر -->
+        <div id="shahan-tab" class="tab-content" style="display: block;">
+            <div class="input-group"><label>ادخل ID المستخدم:</label><input type="text" id="shahan-id" placeholder="ID اللاعب..."></div>
             <div class="input-group">
-                <label>ادخل ID المستخدم:</label>
-                <input type="text" id="shahan-id" placeholder="اكتب ID اللاعب هنا...">
+                <label>عدد الكوينزات:</label><input type="number" id="coins-input" placeholder="مثال: 3500">
+                <span class="hint">* الحد الأدنى 3500 كوينز</span>
             </div>
-            
             <div class="input-group">
-                <label>عدد الكوينزات المراد شحنها:</label>
-                <input type="number" id="coins-input" placeholder="مثال: 3500">
-                <span class="hint">* الحد الأدنى للشحن هو 3500 كوينز</span>
+                <label>المبلغ المطلوب ($):</label><input type="number" id="price-input" placeholder="مثال: 1" step="0.01">
+                <span class="hint">* الحد الأدنى 1$</span>
             </div>
-
-            <div class="input-group">
-                <label>المبلغ المطلوب ($):</label>
-                <input type="number" id="price-input" placeholder="مثال: 1" step="0.01">
-                <span class="hint">* الحد الأدنى للمبلغ هو 1$</span>
-            </div>
-            
             <button class="btn-submit" onclick="processShipping()">اشحن للمستخدم الآن</button>
         </div>
 
-        <!-- قسم الترحيبات -->
+        <!-- قسم الترحيبات صالحة لمدة 7 أيام -->
         <div id="tarheeb-tab" class="tab-content">
+            <div class="input-group"><label>ادخل ID المستخدم:</label><input type="text" id="tarheeb-id" placeholder="ID اللاعب..."></div>
             <div class="input-group">
-                <label>ادخل ID المستخدم:</label>
-                <input type="text" id="tarheeb-id" placeholder="اكتب ID اللاعب هنا...">
-            </div>
-            
-            <div class="input-group">
-                <label>اختر باقة الترحيب (المدة: 7 أيام فقط):</label>
+                <label>اختر باقة الترحيب (7 أيام فقط):</label>
                 <select id="vip-package">
                     <option value="vip1">باقة VIP 1 ترحيبية (7 أيام)</option>
                     <option value="vip2">باقة VIP 2 ترحيبية (7 أيام)</option>
-                    <option value="vip3">باقة VIP 3 ترحيبية (7 أيام)</option>
-                    <option value="vip4">باقة VIP 4 ترحيبية (7 أيام)</option>
-                    <option value="vip5">باقة VIP 5 ترحيبية (7 أيام)</option>
-                    <option value="vip6">باقة VIP 6 ترحيبية (7 أيام)</option>
                 </select>
             </div>
-            
             <button class="btn-submit" onclick="processWelcome()">تفعيل الترحيب (7 أيام)</button>
         </div>
     </div>
 </div>
 
 <script>
-    // إعدادات Firebase الخاصة بقاعدة بياناتك المباشرة
-    const firebaseConfig = {
-        databaseURL: "https://deksa-f5b61-default-rtdb.asia-southeast1.firebaseio.com"
-    };
-    firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp({ databaseURL: "https://deksa-f5b61-default-rtdb.asia-southeast1.firebaseio.com" });
     const database = firebase.database();
-
     let currentAgent = "";
 
-    // وظيفة التحقق من الرمز والاتصال بقاعدة البيانات
     function checkAgentLogin() {
         const code = document.getElementById('agent-code-input').value.trim();
-        if(!code) {
-            alert('الرجاء إدخال الرمز السري!');
-            return;
-        }
-
-        // البحث داخل عقدة agents في الفيربيز
         database.ref('agents/' + code).once('value').then((snapshot) => {
             if (snapshot.exists() && snapshot.val().active === true) {
                 currentAgent = code;
-                const data = snapshot.val();
-                
-                // تحديث العدادات على الشاشة بالقيم الحقيقية
-                document.getElementById('coins-display').innerText = Number(data.coinsStock).toLocaleString();
-                document.getElementById('vip1-display').innerText = data.vip1_count || 0;
-                document.getElementById('vip2-display').innerText = data.vip2_count || 0;
-                document.getElementById('welcome-title').innerText = "أهلاً بك يا وكيل " + code + " 👋";
-
-                // التنقل بين الشاشات
+                updateDisplays(snapshot.val());
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-panel').style.display = 'block';
-            } else {
-                alert('عذراً، هذا الرمز غير مسجل أو حساب الوكيل معطل!');
-            }
-        }).catch((error) => {
-            console.error(error);
-            alert('حدث خطأ أثناء الاتصال بقاعدة البيانات!');
+            } else { alert('عذراً، الرمز غير مسجل أو الحساب معطل!'); }
         });
     }
 
+    function updateDisplays(data) {
+        document.getElementById('coins-display').innerText = Number(data.coinsStock).toLocaleString();
+        document.getElementById('vip1-display').innerText = data.vip1_count || 0;
+        document.getElementById('vip2-display').innerText = data.vip2_count || 0;
+        document.getElementById('welcome-title').innerText = "أهلاً بك يا وكيل " + currentAgent + " 👋";
+    }
+
     function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        
-        document.getElementById(tabId).classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).style.display = 'block';
         event.currentTarget.classList.add('active');
     }
 
     function processShipping() {
-        const userId = document.getElementById('shahan-id').value.trim();
+        const id = document.getElementById('shahan-id').value.trim();
         const coins = parseInt(document.getElementById('coins-input').value);
         const price = parseFloat(document.getElementById('price-input').value);
 
-        if(!userId) {
-            alert('يرجى إدخال ID المستخدم أولاً!');
-            return;
-        }
-        if(isNaN(coins) || coins < 3500) {
-            alert('خطأ: أقل كمية شحن مسموح بها هي 3500 كوينز!');
-            return;
-        }
-        if(isNaN(price) || price < 1) {
-            alert('خطأ: أدنى مبلغ شحن مسموح به هو 1$!');
-            return;
+        if(!id || isNaN(coins) || coins < 3500 || isNaN(price) || price < 1) {
+            alert('خطأ: تحقق من البيانات (أدنى شحن 3500 كوينز بـ 1$)!'); return;
         }
 
-        // خصم الكوينزات من الفيربيز وتحديث المخزون
-        database.ref('agents/' + currentAgent + '/coinsStock').transaction((currentStock) => {
-            if (currentStock >= coins) {
-                return currentStock - coins;
-            } else {
-                alert('مخزونك الحالي غير كافٍ لإتمام هذه العملية!');
-                return; // إلغاء العملية إذا كان المخزون غير كافٍ
-            }
-        }, (error, committed, snapshot) => {
-            if (committed) {
-                document.getElementById('coins-display').innerText = Number(snapshot.val()).toLocaleString();
-                alert('تم بنجاح شحن ' + coins + ' كوينز بقيمة ' + price + '$ للحساب ID: ' + userId);
-                document.getElementById('shahan-id').value = "";
-                document.getElementById('coins-input').value = "";
-                document.getElementById('price-input').value = "";
-            }
+        database.ref('agents/' + currentAgent + '/coinsStock').transaction(stock => (stock >= coins) ? stock - coins : undefined, (err, comm, snap) => {
+            if (comm) {
+                document.getElementById('coins-display').innerText = Number(snap.val()).toLocaleString();
+                alert(`تم شحن ${coins} كوينز بقيمة ${price}$ لـ ID: ${id}`);
+                document.getElementById('shahan-id').value = ""; document.getElementById('coins-input').value = ""; document.getElementById('price-input').value = "";
+            } else { alert('المخزون غير كافٍ!'); }
         });
     }
 
     function processWelcome() {
-        const userId = document.getElementById('tarheeb-id').value.trim();
-        const vipSelected = document.getElementById('vip-package').value;
-        const vipKey = vipSelected + "_count";
+        const id = document.getElementById('tarheeb-id').value.trim();
+        const vip = document.getElementById('vip-package').value;
+        if(!id) { alert('ادخل ID المستخدم!'); return; }
 
-        if(!userId) {
-            alert('يرجى إدخال ID المستخدم لتفعيل الترحيب!');
-            return;
-        }
-
-        // خصم باقة VIP من الفيربيز وتحديثها
-        database.ref('agents/' + currentAgent + '/' + vipKey).transaction((currentCount) => {
-            if (currentCount > 0) {
-                return currentCount - 1;
-            } else {
-                alert('ليس لديك باقات كافية متوفرة من هذا النوع!');
-                return;
-            }
-        }, (error, committed, snapshot) => {
-            if (committed) {
-                if(vipSelected === 'vip1') document.getElementById('vip1-display').innerText = snapshot.val();
-                if(vipSelected === 'vip2') document.getElementById('vip2-display').innerText = snapshot.val();
-                alert('تم تفعيل ' + vipSelected + ' للمستخدم ID: ' + userId + ' لمدة 7 أيام بنجاح!');
+        database.ref(`agents/${currentAgent}/${vip}_count`).transaction(count => (count > 0) ? count - 1 : undefined, (err, comm, snap) => {
+            if (comm) {
+                document.getElementById(`${vip}-display`).innerText = snap.val();
+                alert(`تم تفعيل ${vip} لـ ID: ${id} لمدة 7 أيام!`);
                 document.getElementById('tarheeb-id').value = "";
-            }
+            } else { alert('لا توجد باقات كافية!'); }
         });
     }
 </script>
