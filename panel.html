@@ -4,44 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة تحكم DEKSA</title>
+    
+    <!-- تضمين النسخ الكاملة والمستقرة من Firebase لضمان العمل على جميع الأجهزة -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
         body { font-family: sans-serif; background: #121212; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .container { background: #1e1e1e; padding: 25px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); width: 100%; max-width: 420px; text-align: center; }
         .tabs { display: flex; justify-content: space-around; margin: 20px 0; border-bottom: 2px solid #333; }
         .tab-btn { background: none; border: none; color: #aaa; padding: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .tab-btn.active { color: #ff8c00; border-bottom: 3px solid #ff8c00; }
-        .tab-content, #main-panel { display: none; }
+        .tab-content { display: none; }
+        #main-panel { display: none; }
         .info-box { background: #2a3a4a; padding: 12px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; }
         .input-group { margin-bottom: 15px; text-align: right; }
         label { display: block; margin-bottom: 5px; font-size: 14px; color: #ccc; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #444; background: #252525; color: #fff; box-sizing: border-box; outline: none; }
+        input { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #444; background: #252525; color: #fff; box-sizing: border-box; outline: none; font-size: 15px; }
         input:focus { border-color: #ff8c00; }
-        .btn-submit { background: #e65c00; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-submit { background: #e65c00; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; display: block; }
         .hint { font-size: 11px; color: #ffaa00; display: block; margin-top: 4px; }
     </style>
 </head>
 <body>
 <div class="container">
-    <!-- 1️⃣ شاشة قفل الأمان (تظهر بالباق أولاً) -->
+
+    <!-- 1️⃣ شاشة قفل الأمان لطلب الباسوورد أولاً -->
     <div id="login-screen">
         <h2>قفل الأمان: لوحة الوكلاء</h2>
         <div class="input-group">
             <label>أدخل رمز الوكيل المعتمد للدخول:</label>
             <input type="password" id="agent-code-input" placeholder="••••••••••••">
         </div>
-        <button class="btn-submit" onclick="checkAgentLogin()">التحقق من الإذن</button>
+        <button class="btn-submit" id="login-btn" onclick="checkAgentLogin()">التحقق من الإذن</button>
     </div>
 
-    <!-- 2️⃣ لوحة التحكم الرئيسية الحرة للوكيل -->
+    <!-- 2️⃣ اللوحة الرئيسية الحرة للوكيل -->
     <div id="main-panel">
         <h2 id="welcome-title">لوحة الوكيل 👋</h2>
         <div class="info-box"><span>🪙 مخزون الكوينز الحالي:</span><span id="coins-display">0</span></div>
 
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('shahan-tab')">الشحن</button>
-            <button class="tab-btn" onclick="switchTab('tarheeb-tab')">الترحيبات</button>
+            <button class="tab-btn active" onclick="switchTab('shahan-tab', event)">الشحن</button>
+            <button class="tab-btn" onclick="switchTab('tarheeb-tab', event)">الترحيبات</button>
         </div>
 
         <!-- ================= قسم الشحن الحُر ================= -->
@@ -56,14 +61,14 @@
                 <span class="hint">* الحد الأدنى للشحن 3500 كوينز</span>
             </div>
             <div class="input-group">
-                <label>المبلغ المطلوب ($):</label>
+                <label>عدد المبلغ ($):</label>
                 <input type="number" id="price-input" placeholder="مثال: 1" step="0.01">
                 <span class="hint">* الحد الأدنى للمبلغ 1$</span>
             </div>
             <button class="btn-submit" onclick="processShipping()">اشحن للمستخدم الآن</button>
         </div>
 
-        <!-- ================= قسم الترحيبات الحُر بالكامل ================= -->
+        <!-- ================= قسم الترحيبات الحُر ================= -->
         <div id="tarheeb-tab" class="tab-content">
             <div class="input-group">
                 <label>ادخل ID المستخدم:</label>
@@ -71,7 +76,7 @@
             </div>
             <div class="input-group">
                 <label>عدد الترحيب (رقم باقة VIP أو اسمها):</label>
-                <input type="text" id="welcome-vip-input" placeholder="مثال: VIP 1 أو 1">
+                <input type="text" id="welcome-vip-input" placeholder="مثال: VIP 1">
             </div>
             <div class="input-group">
                 <label>عدد الأيام المسموحة للترحيب:</label>
@@ -83,70 +88,111 @@
 </div>
 
 <script>
-    // تهيئة وقراءة الـ Firebase بالمسار المباشر
-    const firebaseConfig = { databaseURL: "https://deksa-f5b61-default-rtdb.asia-southeast1.firebaseio.com" };
-    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-    const database = firebase.database();
-    let currentAgent = "";
+    // إعدادات الاتصال المباشر بقاعدة البيانات
+    var firebaseConfig = { databaseURL: "https://deksa-f5b61-default-rtdb.asia-southeast1.firebaseio.com" };
+    
+    // ضمان تهيئة التطبيق بشكل صحيح ومتوافق مع المتصفحات القديمة والحديثة
+    if (!firebase.apps.length) { 
+        firebase.initializeApp(firebaseConfig); 
+    } else {
+        firebase.app();
+    }
+    
+    var database = firebase.database();
+    var currentAgent = "";
 
-    // دالة تسجيل الدخول عبر الباسوورد
+    // دالة تسجيل الدخول المتوافقة مع جميع الأجهزة
     function checkAgentLogin() {
-        const code = document.getElementById('agent-code-input').value.trim();
-        if (!code) { alert('الرجاء إدخال الرمز!'); return; }
-
-        database.ref('agents/' + code).once('value').then((snapshot) => {
-            if (snapshot.exists()) {
-                const agentData = snapshot.val();
-                if (agentData.active === true || agentData.active === "true") {
-                    currentAgent = code;
-                    document.getElementById('coins-display').innerText = Number(agentData.coinsStock || 0).toLocaleString();
-                    document.getElementById('welcome-title').innerText = "أهلاً بك يا وكيل " + currentAgent + " 👋";
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('main-panel').style.display = 'block';
-                } else { alert('حساب الوكيل معطل!'); }
-            } else { alert('الرمز غير صحيح أو غير مسجل!'); }
-        }).catch((err) => { alert('خطأ في الاتصال بقاعدة البيانات!'); });
-    }
-
-    // التنقل بين الأقسام
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).style.display = 'block';
-        if(event) { event.currentTarget.classList.add('active'); }
-    }
-
-    // تنفيذ معالجة الشحن الحُر
-    function processShipping() {
-        const id = document.getElementById('shahan-id').value.trim();
-        const coins = parseInt(document.getElementById('coins-input').value);
-        const price = parseFloat(document.getElementById('price-input').value);
-
-        if(!id || isNaN(coins) || coins < 3500 || isNaN(price) || price < 1) {
-            alert('خطأ: تحقق من البيانات المكتوبة (أدنى شحن 3500 كوينز بـ 1$)!'); return;
+        var codeInput = document.getElementById('agent-code-input');
+        var code = codeInput.value.trim();
+        
+        if (!code) { 
+            alert('الرجاء إدخال الرمز!'); 
+            return; 
         }
 
-        database.ref('agents/' + currentAgent + '/coinsStock').transaction(stock => (stock >= coins) ? stock - coins : undefined, (err, comm, snap) => {
-            if (comm) {
-                document.getElementById('coins-display').innerText = Number(snap.val()).toLocaleString();
-                alert(`تم شحن ${coins} كوينز بنجاح بقيمة ${price}$ للمستخدم ID: ${id}`);
-                document.getElementById('shahan-id').value = ""; document.getElementById('coins-input').value = ""; document.getElementById('price-input').value = "";
-            } else { alert('المخزون الحالي لديك غير كافٍ لهذا الشحن!'); }
+        // جلب البيانات مع معالجة الأخطاء لضمان استجابة المتصفح
+        database.ref('agents/' + code).once('value').then(function(snapshot) {
+            if (snapshot.exists()) {
+                var agentData = snapshot.val();
+                if (agentData.active === true || agentData.active === "true") {
+                    currentAgent = code;
+                    
+                    // تحديث مخزون الكوينز والترحيب بوكيل الشحن
+                    document.getElementById('coins-display').innerText = Number(agentData.coinsStock || 0).toLocaleString();
+                    document.getElementById('welcome-title').innerText = "أهلاً بك يا وكيل " + currentAgent + " 👋";
+                    
+                    // تحويل الواجهات
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('main-panel').style.display = 'block';
+                } else { 
+                    alert('حساب الوكيل معطل!'); 
+                }
+            } else { 
+                alert('الرمز غير صحيح أو غير مسجل!'); 
+            }
+        }).catch(function(err) { 
+            alert('فشل الاتصال: تأكد من اتصال الإنترنت أو إعدادات الحماية لقاعدة البيانات.'); 
         });
     }
 
-    // تنفيذ تفعيل الترحيب الحُر
-    function processWelcome() {
-        const id = document.getElementById('tarheeb-id').value.trim();
-        const welcomeVip = document.getElementById('welcome-vip-input').value.trim();
-        const welcomeDays = parseInt(document.getElementById('welcome-days-input').value);
+    // التنقل السلس بين الأقسام
+    function switchTab(tabId, event) {
+        var contents = document.getElementsByClassName('tab-content');
+        for (var i = 0; i < contents.length; i++) {
+            contents[i].style.display = 'none';
+        }
+        var buttons = document.getElementsByClassName('tab-btn');
+        for (var j = 0; j < buttons.length; j++) {
+            buttons[j].classList.remove('active');
+        }
+        document.getElementById(tabId).style.display = 'block';
+        if (event && event.currentTarget) {
+            event.currentTarget.classList.add('active');
+        }
+    }
 
-        if(!id || !welcomeVip || isNaN(welcomeDays) || welcomeDays <= 0) {
-            alert('خطأ: يرجى كتابة ID المستخدم، عدد الترحيب، وعدد الأيام بشكل صحيح!'); return;
+    // معالجة الشحن الحُر المباشر
+    function processShipping() {
+        var id = document.getElementById('shahan-id').value.trim();
+        var coins = parseInt(document.getElementById('coins-input').value);
+        var price = parseFloat(document.getElementById('price-input').value);
+
+        if (!id || isNaN(coins) || coins < 3500 || isNaN(price) || price < 1) {
+            alert('خطأ: تحقق من البيانات المكتوبة (أدنى شحن 3500 كوينز بـ 1$)!'); 
+            return;
         }
 
-        // إرسال البيانات المفتوحة وحرية الإدخال بالكامل
-        alert(`تم بنجاح تفعيل الترحيب (${welcomeVip}) للمستخدم ID: ${id} وذلك لمدة ${welcomeDays} يوماً بالتمام!`);
+        database.ref('agents/' + currentAgent + '/coinsStock').transaction(function(stock) {
+            if (stock >= coins) {
+                return stock - coins;
+            }
+            return undefined;
+        }, function(err, comm, snap) {
+            if (comm) {
+                document.getElementById('coins-display').innerText = Number(snap.val()).toLocaleString();
+                alert('تم شحن ' + coins + ' كوينز بنجاح بقيمة ' + price + '$ للمصدر ID: ' + id);
+                document.getElementById('shahan-id').value = ""; 
+                document.getElementById('coins-input').value = ""; 
+                document.getElementById('price-input').value = "";
+            } else { 
+                alert('المخزون الحالي لديك غير كافٍ لهذا الشحن!'); 
+            }
+        });
+    }
+
+    // معالجة الترحيبات الحرة
+    function processWelcome() {
+        var id = document.getElementById('tarheeb-id').value.trim();
+        var welcomeVip = document.getElementById('welcome-vip-input').value.trim();
+        var welcomeDays = parseInt(document.getElementById('welcome-days-input').value);
+
+        if (!id || !welcomeVip || isNaN(welcomeDays) || welcomeDays <= 0) {
+            alert('خطأ: يرجى كتابة ID المستخدم، عدد الترحيب، وعدد الأيام بشكل صحيح!'); 
+            return;
+        }
+
+        alert('تم بنجاح تفعيل الترحيب (' + welcomeVip + ') للمستخدم ID: ' + id + ' وذلك لمدة ' + welcomeDays + ' يوماً بالتمام!');
         document.getElementById('tarheeb-id').value = "";
         document.getElementById('welcome-vip-input').value = "";
         document.getElementById('welcome-days-input').value = "";
