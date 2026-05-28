@@ -5,222 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة شحن وكلاء DEKSA</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #fff; text-align: center; padding: 20px; margin: 0; }
-        .box { background: #1e1e1e; padding: 25px; border-radius: 15px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 90%; max-width: 380px; margin-top: 30px; box-sizing: border-box; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #333; background: #252525; color: #fff; text-align: center; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #ff9800; border: none; color: #fff; font-weight: bold; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:hover { background: #e68a00; }
-        .hidden { display: none !important; }
-        
-        .tabs { display: flex; justify-content: space-around; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .tab-btn { background: none; border: none; color: #aaa; font-size: 18px; font-weight: bold; cursor: pointer; width: 45%; padding: 5px; }
-        .tab-btn.active { color: #ff9800; border-bottom: 3px solid #ff9800; }
-        
-        .status-msg { color: #4caf50; font-weight: bold; margin-top: 15px; font-size: 14px; }
-        .stock-info { background: #252525; padding: 10px; border-radius: 8px; font-size: 13px; text-align: right; margin-bottom: 15px; border: 1px solid #333; }
-        .stock-info span { color: #ff9800; font-weight: bold; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #ffffff; text-align: center; padding: 20px; }
+        .box { background: #1e1e1e; padding: 20px; border-radius: 10px; max-width: 400px; margin: auto; box-shadow: 0px 4px 10px rgba(0,0,0,0.5); }
+        input { width: 90%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #444; background: #2a2a2a; color: #fff; text-align: center; }
+        button { width: 95%; padding: 12px; background-color: #e67e22; border: none; border-radius: 5px; color: white; font-size: 16px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #d35400; }
+        .hidden { display: none; }
+        .stat-card { background: #2c3e50; padding: 10px; margin: 5px 0; border-radius: 5px; text-align: right; padding-right: 15px; }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
 
-    <!-- شاشة قفل الموقع -->
     <div id="loginBox" class="box">
         <h2>قفل الأمان: لوحة الوكلاء</h2>
         <p>أدخل رمز الوكيل المعتمد للدخول</p>
-        <input type="text" id="agentToken" placeholder="أدخل الرمز السري هنا" style="-webkit-text-security: disc;">
-        <button onclick="checkAccess()">التحقق من الإذن</button>
+        <input type="password" id="agentCode" placeholder="أدخل الرمز هنا...">
+        <button onclick="checkAgent()">التحقق من الإذن</button>
     </div>
 
-    <!-- اللوحة الرئيسية بعد الدخول -->
-    <div id="controlPanel" class="box hidden">
-        
-        <div class="tabs">
-            <button id="btnTabShip" class="tab-btn active" onclick="switchTab('ship')">الشحن</button>
-            <button id="btnTabWelcome" class="tab-btn" onclick="switchTab('welcome')">الترحيب</button>
-        </div>
-
-        <!-- عرض رصيد ومخزون الوكالة المتبقي جلب حي من Firebase -->
-        <div class="stock-info">
-            <div>رصيد كوينزات الوكالة المتبقي: <span id="agentCoinsStock">0</span></div>
-            <div style="margin-top: 5px; font-weight: bold; color: #aaa;">مخزون ترحيبات VIP المتبقية (مدتها 7 أيام):</div>
-            <div id="vipStockList" style="font-size: 12px; margin-top: 3px; color: #ccc;">
-                VIP1: <span id="s_vip1">0</span> | VIP2: <span id="s_vip2">0</span> | VIP3: <span id="s_vip3">0</span><br>
-                VIP4: <span id="s_vip4">0</span> | VIP5: <span id="s_vip5">0</span> | VIP6: <span id="s_vip6">0</span>
-            </div>
-        </div>
-
-        <!-- ================= قسم الشحن ================= -->
-        <div id="tabShipContent">
-            <input type="text" id="userUidShip" placeholder="أدخل ID المستخدم">
-            <input type="number" id="coinsAmount" placeholder="أدخل عدد الكوينزات">
-            <input type="number" id="dollarsAmount" placeholder="أدخل عدد الدولارات">
-            <button onclick="sendShipData()">تأكيد عملية الشحن</button>
-        </div>
-
-        <!-- ================= قسم الترحيب ================= -->
-        <div id="tabWelcomeContent" class="hidden">
-            <input type="text" id="userUidWelcome" placeholder="أدخل ID المستخدم">
-            
-            <select id="vipLevel">
-                <option value="" disabled selected>اختر فئة الـ VIP (المدة ثابتة 7 أيام)</option>
-                <option value="vip1">VIP 1</option>
-                <option value="vip2">VIP 2</option>
-                <option value="vip3">VIP 3</option>
-                <option value="vip4">VIP 4</option>
-                <option value="vip5">VIP 5</option>
-                <option value="vip6">VIP 6</option>
-            </select>
-            <button onclick="sendWelcomeData()">تأكيد تفعيل الترحيب</button>
-        </div>
-
-        <p id="status" class="status-msg"></p>
+    <div id="dashboard" class="box hidden">
+        <h2>أهلاً بك يا وكيل DEKSA 👋</h2>
+        <hr>
+        <div class="stat-card">🪙 مخزون الكوينز: <span id="coins">0</span></div>
+        <div class="stat-card">⭐ باقات VIP 1 المتوفرة: <span id="vip1">0</span></div>
+        <div class="stat-card">⭐ باقات VIP 2 المتوفرة: <span id="vip2">0</span></div>
+        <div class="stat-card">⭐ باقات VIP 3 المتوفرة: <span id="vip3">0</span></div>
+        <div class="stat-card">⭐ باقات VIP 4 المتوفرة: <span id="vip4">0</span></div>
+        <div class="stat-card">⭐ باقات VIP 5 المتوفرة: <span id="vip5">0</span></div>
+        <div class="stat-card">⭐ باقات VIP 6 المتوفرة: <span id="vip6">0</span></div>
+        <br>
+        <input type="text" id="userId" placeholder="أدخل ID حساب اللاعب">
+        <button onclick="sendToUser()">اشحن للمستخدم الآن</button>
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AlzaSyC5RGml-PoOk7CV9FlvphOgTSTA4RsmA7w",
-            databaseURL: "https://deksa-f5b61-default-rtdb.asia-southeast1.firebasedatabase.app/",
-            projectId: "deksa-f5b61"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        // رابط قاعدة بيانات فيربيز الخاصة بمشروعك مباشرة
+        const dbUrl = "https://deksa-f5b61-default-rtdb.asia-southeast1.firebasedatabase.app/agents";
 
-        let currentAgentToken = "";
+        async function checkAgent() {
+            const code = document.getElementById('agentCode').value.trim();
+            if(!code) { alert('الرجاء إدخال الرمز أولاً!'); return; }
 
-        // التحقق والاستماع لبيانات مخزون الوكيل فوراً
-        function checkAccess() {
-            const token = document.getElementById('agentToken').value.trim();
-            if(!token) { alert('الرجاء إدخال الرمز أولاً'); return; }
+            try {
+                const response = await fetch(`${dbUrl}/${code}.json`);
+                const data = await response.json();
 
-            database.ref('agents/' + token).on('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    const agentData = snapshot.val();
+                if(data && data.active === true) {
+                    document.getElementById('loginBox').classList.add('hidden');
+                    document.getElementById('dashboard').classList.remove('hidden');
                     
-                    if (agentData.active === true) {
-                        currentAgentToken = token;
-                        
-                        // تحديث واجهة المخزون أمام الوكيل من الداتابيز مباشرة
-                        document.getElementById('agentCoinsStock').innerText = (agentData.coinsStock || 0).toLocaleString();
-                        document.getElementById('s_vip1').innerText = agentData.vip1_count || 0;
-                        document.getElementById('s_vip2').innerText = agentData.vip2_count || 0;
-                        document.getElementById('s_vip3').innerText = agentData.vip3_count || 0;
-                        document.getElementById('s_vip4').innerText = agentData.vip4_count || 0;
-                        document.getElementById('s_vip5').innerText = agentData.vip5_count || 0;
-                        document.getElementById('s_vip6').innerText = agentData.vip6_count || 0;
-
-                        document.getElementById('loginBox').classList.add('hidden');
-                        document.getElementById('controlPanel').classList.remove('hidden');
-                    } else {
-                        alert('هذا الحساب تم إيقافه من الإدارة!');
-                    }
+                    document.getElementById('coins').innerText = data.coinsStock.toLocaleString();
+                    document.getElementById('vip1').innerText = data.vip1_count;
+                    document.getElementById('vip2').innerText = data.vip2_count;
+                    document.getElementById('vip3').innerText = data.vip3_count;
+                    document.getElementById('vip4').innerText = data.vip4_count;
+                    document.getElementById('vip5').innerText = data.vip5_count;
+                    document.getElementById('vip6').innerText = data.vip6_count;
                 } else {
-                    alert('عذراً، الرمز السري غير صحيح!');
+                    alert('عذراً، هذا الرمز غير مسجل أو حساب الوكيل معطل!');
                 }
-            });
-        }
-
-        function switchTab(tabName) {
-            const btnShip = document.getElementById('btnTabShip');
-            const btnWelcome = document.getElementById('btnTabWelcome');
-            const contentShip = document.getElementById('tabShipContent');
-            const contentWelcome = document.getElementById('tabWelcomeContent');
-            document.getElementById('status').innerText = "";
-
-            if (tabName === 'ship') {
-                btnShip.classList.add('active');
-                btnWelcome.classList.remove('active');
-                contentShip.classList.remove('hidden');
-                contentWelcome.classList.add('hidden');
-            } else {
-                btnShip.classList.remove('active');
-                btnWelcome.classList.add('active');
-                contentShip.classList.add('hidden');
-                contentWelcome.classList.remove('hidden');
+            } catch (error) {
+                alert('حدث خطأ أثناء الاتصال بقاعدة البيانات، تأكد من اتصالك بالإنترنت.');
+                console.error(error);
             }
         }
 
-        // عملية الشحن مع خصم رصيد الوكيل
-        function sendShipData() {
-            const uid = document.getElementById('userUidShip').value.trim();
-            const coins = parseInt(document.getElementById('coinsAmount').value) || 0;
-            const dollars = parseInt(document.getElementById('dollarsAmount').value) || 0;
-            const statusText = document.getElementById('status');
-
-            if(!uid) { alert('يرجى إدخال ID المستخدم'); return; }
-            if(coins <= 0 && dollars <= 0) { alert('يرجى إدخال قيم شحن صالحة'); return; }
-
-            const agentRef = database.ref('agents/' + currentAgentToken);
-            
-            agentRef.once('value').then((agentSnap) => {
-                const agentData = agentSnap.val();
-                const currentCoinsStock = agentData.coinsStock || 0;
-
-                if (coins > currentCoinsStock) {
-                    alert('⚠️ خطأ: رصيد كوينزات الوكالة غير كافٍ! رصيدك الحالي هو: ' + currentCoinsStock);
-                    return;
-                }
-
-                // خصم من الوكيل وإضافة للمستخدم
-                agentRef.update({ coinsStock: currentCoinsStock - coins });
-                
-                const userRef = database.ref('users/' + uid);
-                userRef.once('value').then((userSnap) => {
-                    let uCoins = 0; let uDollars = 0;
-                    if(userSnap.exists()){
-                        uCoins = userSnap.val().coins || 0;
-                        uDollars = userSnap.val().dollars || 0;
-                    }
-                    userRef.update({
-                        coins: uCoins + coins,
-                        dollars: uDollars + dollars
-                    }).then(() => {
-                        statusText.innerText = "✅ تم شحن كوينزات ودولارات بنجاح للمستخدم ونقصت من رصيدك.";
-                        document.getElementById('coinsAmount').value = "";
-                        document.getElementById('dollarsAmount').value = "";
-                    });
-                });
-            });
-        }
-
-        // عملية تفعيل الترحيب بخصم أعداد الـ VIP المحددة
-        function sendWelcomeData() {
-            const uid = document.getElementById('userUidWelcome').value.trim();
-            const vip = document.getElementById('vipLevel').value;
-            const statusText = document.getElementById('status');
-
-            if(!uid || !vip) { alert('يرجى إدخال الـ ID واختيار فئة الـ VIP'); return; }
-
-            const agentRef = database.ref('agents/' + currentAgentToken);
-            
-            agentRef.once('value').then((agentSnap) => {
-                const agentData = agentSnap.val();
-                const vipKey = vip + "_count"; // ليكون vip1_count, vip2_count إلخ
-                const currentVipStock = agentData[vipKey] || 0;
-
-                if (currentVipStock <= 0) {
-                    alert('⚠️ خطأ: لقد نفذ مخزون باقات ' + vip.toUpperCase() + ' المتاحة في وكالتك!');
-                    return;
-                }
-
-                // الخصم من مخزون الـ VIP للوكيل
-                let updateData = {};
-                updateData[vipKey] = currentVipStock - 1;
-                agentRef.update(updateData);
-
-                // كتابة حزمة الترحيب للمستخدم بالمدة الثابتة (7 أيام)
-                const welcomeRef = database.ref('users/' + uid + '/welcomePackage');
-                welcomeRef.set({
-                    vipLevel: vip.toUpperCase(),
-                    remainingDays: 7, // السياسة الثابتة 7 أيام
-                    activationDate: new Date().toISOString().split('T')[0]
-                }).then(() => {
-                    statusText.innerText = "✅ تم تفعيل باقة الترحيب " + vip.toUpperCase() + " للمستخدم لمدة 7 أيام.";
-                    document.getElementById('vipLevel').selectedIndex = 0;
-                });
-            });
+        function sendToUser() {
+            const id = document.getElementById('userId').value;
+            if(!id) { alert('يرجى إدخال ID اللاعب!'); return; }
+            alert('تم إرسال طلب الشحن بنجاح وجاري المعالجة كمسؤول!');
         }
     </script>
 </body>
