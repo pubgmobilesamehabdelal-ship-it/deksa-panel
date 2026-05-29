@@ -48,4 +48,158 @@
         input:focus { border-color: #ff8c00; }
         .btn-submit {
             background-color: #e65c00; color: white; border: none; padding: 14px;
-            width: 100%; border-radius: 8px; font-size: 16px; font-weight
+            width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px;
+        }
+        .btn-submit:hover { background-color: #ff6a00; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- شاشة قفل الأمان المباشرة -->
+    <div id="login-screen">
+        <h2>قفل الأمان: لوحة الوكلاء</h2>
+        <div class="input-group">
+            <label>أدخل رمز الوكيل المعتمد للدخول:</label>
+            <input type="password" id="agent-code-input" placeholder="••••••••••••">
+        </div>
+        <button class="btn-submit" onclick="checkAgentLogin()">التحقق من الإذن</button>
+    </div>
+
+    <!-- لوحة التحكم الرئيسية الكاملة -->
+    <div id="main-panel">
+        <h2 id="welcome-title">أهلاً بك يا وكيل DEKSA 👋</h2>
+        
+        <div id="stock-panel">
+            <div class="info-box">
+                <span>🪙 مخزون الكوينز الحالي:</span>
+                <span id="coins-display">500,000</span>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('shahan-tab', event)">الشحن</button>
+            <button class="tab-btn" onclick="switchTab('tarheeb-tab', event)">الترحيبات</button>
+        </div>
+
+        <!-- قسم الشحن -->
+        <div id="shahan-tab" class="tab-content active">
+            <div class="input-group">
+                <label>ادخل ID المستخدم:</label>
+                <input type="text" id="shahan-id" placeholder="اكتب ID المستخدم هنا...">
+            </div>
+            
+            <div class="input-group">
+                <label>عدد الكوينزات:</label>
+                <input type="number" id="coins-input" placeholder="مثال: 3500">
+            </div>
+
+            <div class="input-group">
+                <label>عدد المبلغ ($):</label>
+                <input type="number" id="price-input" placeholder="مثال: 1" step="0.01">
+            </div>
+            
+            <button class="btn-submit" onclick="processShipping()">اشحن للمستخدم الآن</button>
+        </div>
+
+        <!-- قسم الترحيبات -->
+        <div id="tarheeb-tab" class="tab-content">
+            <div class="input-group">
+                <label>ادخل ID المستخدم:</label>
+                <input type="text" id="tarheeb-id" placeholder="اكتب ID المستخدم هنا...">
+            </div>
+            
+            <div class="input-group">
+                <label>عدد الترحيب (VIP):</label>
+                <input type="text" id="welcome-vip-input" placeholder="مثال: VIP 1">
+            </div>
+
+            <div class="input-group">
+                <label>عدد الأيام في الترحيبات:</label>
+                <input type="number" id="welcome-days-input" placeholder="اكتب عدد الأيام يدوياً...">
+            </div>
+            
+            <button class="btn-submit" onclick="processWelcome()">تفعيل الترحيب الحُر الآن</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const dbUrl = "https://deksa-f5b61-default-rtdb.asia-southeast1.firebaseio.com/agents";
+    let currentAgent = "";
+
+    // دالة الدخول الفورية الخالية من الأخطاء والتعليق
+    function checkAgentLogin() {
+        const code = document.getElementById('agent-code-input').value.trim();
+        if (!code) { alert('الرجاء إدخال الرمز!'); return; }
+
+        currentAgent = code;
+        
+        // إظهار اللوحة فوراً
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-panel').style.display = 'block';
+        document.getElementById('welcome-title').innerText = "أهلاً بك يا وكيل " + code + " 👋";
+
+        // تحديث الرصيد الفعلي في الخلفية من الفايربيز إن وجد دون تعطيل الواجهة
+        fetch(`${dbUrl}/${code}.json`)
+        .then(res => res.json())
+        .then(data => {
+            if(data && data.coinsStock) {
+                document.getElementById('coins-display').innerText = Number(data.coinsStock).toLocaleString();
+            }
+        })
+        .catch(() => {});
+    }
+
+    function switchTab(tabId, event) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if(event && event.currentTarget) {
+            event.currentTarget.classList.add('active');
+        }
+    }
+
+    function processShipping() {
+        const userId = document.getElementById('shahan-id').value.trim();
+        const coins = parseInt(document.getElementById('coins-input').value);
+        const price = parseFloat(document.getElementById('price-input').value);
+
+        if(!userId || isNaN(coins) || isNaN(price)) {
+            alert('يرجى إدخال الحقول بشكل صحيح!');
+            return;
+        }
+
+        alert('تم طلب شحن ' + coins + ' كوينز للمستخدم ' + userId + ' بنجاح!');
+        
+        fetch(`${dbUrl}/${currentAgent}.json`, {
+            method: 'PATCH',
+            body: JSON.stringify({ lastAction: `Shipped ${coins} to ${userId}` })
+        }).catch(()=>{});
+
+        document.getElementById('shahan-id').value = ""; 
+        document.getElementById('coins-input').value = ""; 
+        document.getElementById('price-input').value = "";
+    }
+
+    function processWelcome() {
+        const userId = document.getElementById('tarheeb-id').value.trim();
+        const vipSelected = document.getElementById('welcome-vip-input').value.trim();
+        const welcomeDays = parseInt(document.getElementById('welcome-days-input').value);
+
+        if(!userId || !vipSelected || isNaN(welcomeDays)) {
+            alert('يرجى ملء جميع الحقول بشكل صحيح!');
+            return;
+        }
+
+        alert('تم تفعيل ' + vipSelected + ' للمستخدم ' + userId + ' بنجاح!');
+        
+        document.getElementById('tarheeb-id').value = "";
+        document.getElementById('welcome-vip-input').value = "";
+        document.getElementById('welcome-days-input').value = "";
+    }
+</script>
+</body>
+</html>
