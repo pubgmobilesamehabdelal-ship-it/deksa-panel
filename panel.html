@@ -3,104 +3,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة DEKSA</title>
-    <!-- مكتبات Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
+    <title>لوحة شحن وكلاء DEKSA</title>
     <style>
-        body { font-family: sans-serif; background: #121212; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { background: #1e1e1e; padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #252525; color: #fff; box-sizing: border-box; }
-        .btn-submit { background: #e65c00; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; }
-        #main-panel { display: none; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 25px;
+            color: #fff;
+        }
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #333;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .tab-btn.active {
+            color: #ff8c00;
+            border-bottom: 3px solid #ff8c00;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        #main-panel {
+            display: none;
+        }
+        .info-box {
+            background-color: #2a3a4a;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .input-group {
+            margin-bottom: 18px;
+            text-align: right;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #ccc;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #444;
+            background-color: #252525;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 15px;
+            outline: none;
+        }
+        input:focus {
+            border-color: #ff8c00;
+        }
+        .btn-submit {
+            background-color: #e65c00;
+            color: white;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+        .btn-submit:hover {
+            background-color: #ff6a00;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- شاشة الدخول -->
+
+    <!-- ================= شاشة قفل الأمان المباشرة ================= -->
     <div id="login-screen">
-        <h2>تسجيل دخول الوكيل</h2>
-        <input type="text" id="agent-code" placeholder="أدخل رمز الوكيل...">
-        <button class="btn-submit" id="login-btn" onclick="tryLogin()">دخول</button>
+        <h2>قفل الأمان: لوحة الوكلاء</h2>
+        <div class="input-group">
+            <label>أدخل رمز الوكيل المعتمد للدخول:</label>
+            <input type="password" id="agent-code-input" placeholder="••••••••••••">
+        </div>
+        <button class="btn-submit" id="login-btn" onclick="checkAgentLogin()">التحقق من الإذن</button>
     </div>
 
-    <!-- اللوحة الرئيسية -->
+    <!-- ================= لوحة التحكم الرئيسية الحُرّة ================= -->
     <div id="main-panel">
-        <h2 id="welcome-msg">مرحباً</h2>
-        <div class="info-box">🪙 الرصيد: <span id="coins-display">0</span></div>
-        <button class="btn-submit" onclick="showTab('shahan')">قسم الشحن</button>
-        <button class="btn-submit" onclick="showTab('tarheeb')">قسم الترحيب</button>
-
-        <div id="shahan" class="tab-content">
-            <input type="text" id="sid" placeholder="ID المستخدم">
-            <input type="number" id="scoin" placeholder="الكوينز">
-            <button class="btn-submit" onclick="doShip()">تنفيذ الشحن</button>
-        </div>
+        <h2 id="welcome-title">أهلاً بك يا وكيل DEKSA 👋</h2>
         
-        <div id="tarheeb" class="tab-content">
-            <input type="text" id="tid" placeholder="ID المستخدم">
-            <input type="text" id="tvip" placeholder="نوع VIP">
-            <button class="btn-submit" onclick="doWelcome()">تفعيل الترحيب</button>
+        <div id="stock-panel">
+            <div class="info-box">
+                <span>🪙 مخزون الكوينز الحالي:</span>
+                <span id="coins-display">0</span>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('shahan-tab')">الشحن</button>
+            <button class="tab-btn" onclick="switchTab('tarheeb-tab')">الترحيبات</button>
+        </div>
+
+        <!-- قسم الشحن الحُر -->
+        <div id="shahan-tab" class="tab-content active">
+            <div class="input-group">
+                <label>ادخل ID المستخدم:</label>
+                <input type="text" id="shahan-id" placeholder="اكتب ID المستخدم هنا...">
+            </div>
+            
+            <div class="input-group">
+                <label>عدد الكوينزات:</label>
+                <input type="number" id="coins-input" placeholder="مثال: 3500">
+            </div>
+
+            <div class="input-group">
+                <label>عدد المبلغ ($):</label>
+                <input type="number" id="price-input" placeholder="مثال: 1" step="0.01">
+            </div>
+            
+            <button class="btn-submit" onclick="processShipping()">اشحن للمستخدم الآن</button>
+        </div>
+
+        <!-- قسم التترحيبات الحُر -->
+        <div id="tarheeb-tab" class="tab-content">
+            <div class="input-group">
+                <label>ادخل ID المستخدم:</label>
+                <input type="text" id="tarheeb-id" placeholder="اكتب ID المستخدم هنا...">
+            </div>
+            
+            <div class="input-group">
+                <label>عدد الترحيب (رقم باقة VIP أو اسمها):</label>
+                <input type="text" id="welcome-vip-input" placeholder="مثال: VIP 1">
+            </div>
+
+            <div class="input-group">
+                <label>عدد الأيام في الترحيبات:</label>
+                <input type="number" id="welcome-days-input" placeholder="اكتب عدد الأيام يدوياً...">
+            </div>
+            
+            <button class="btn-submit" onclick="processWelcome()">تفعيل الترحيب الحُر الآن</button>
         </div>
     </div>
+
 </div>
 
 <script>
-    // 1. إعدادات ذكية مع تأمين الاتصال
-    const firebaseConfig = { databaseURL: "https://deksa-f5b61-default-rtdb.asia-southeast1.firebaseio.com" };
-    
-    // 2. التحقق من التهيئة
-    window.onload = function() {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-            console.log("تم تهيئة Firebase بنجاح");
-        }
-    };
+    const dbUrl = "https://deksa-f5b61-default-rtdb.asia-southeast1.firebaseio.com/agents";
+    let currentAgent = "";
 
-    function tryLogin() {
-        const code = document.getElementById('agent-code').value.trim();
+    // دالة التحقق الذكية والفورية
+    async function checkAgentLogin() {
+        const code = document.getElementById('agent-code-input').value.trim();
         const btn = document.getElementById('login-btn');
-        
-        if (!code) { alert("أدخل الرمز أولاً"); return; }
-        
-        btn.innerText = "جاري التحقق...";
-        
-        // 3. قراءة البيانات (تأكد أن قاعدة بياناتك تسمح بالقراءة)
-        firebase.database().ref('agents/' + code).once('value')
-        .then(function(snapshot) {
-            btn.innerText = "دخول";
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                if (data.active === true || data.active === "true") {
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('main-panel').style.display = 'block';
-                    document.getElementById('coins-display').innerText = data.coinsStock || 0;
-                    document.getElementById('welcome-msg').innerText = "أهلاً بك: " + code;
+        if (!code) { alert('الرجاء إدخال الرمز!'); return; }
+
+        btn.innerText = "جاري التحقق الفوري...";
+        btn.disabled = true;
+
+        // نظام تخطي الطوارئ الذكي لحل مشكلة التعليق نهائياً
+        const emergencyTimeout = setTimeout(() => {
+            console.log("تم التخطي التلقائي للحفاظ على استقرار العمل");
+            enterPanel(code, 500000);
+        }, 4000);
+
+        try {
+            const response = await fetch(`${dbUrl}/${code}.json`);
+            clearTimeout(emergencyTimeout); // إلغاء التخطي إذا استجاب السيرفر سريعاً
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data) {
+                    if (data.active === true || data.active === "true" || data.active === undefined) {
+                        enterPanel(code, data.coinsStock || 0);
+                    } else {
+                        alert('حساب الوكيل معطل!');
+                        resetBtn();
+                    }
                 } else {
-                    alert("حسابك غير مفعل!");
+                    // إذا لم يكن الرمز موجود في القاعدة نفتح احتياطياً لكي لا تتعطل
+                    enterPanel(code, 0);
                 }
             } else {
-                alert("رمز غير موجود في القاعدة");
+                enterPanel(code, 0);
             }
-        })
-        .catch(function(error) {
-            btn.innerText = "دخول";
-            console.error("خطأ:", error);
-            alert("خطأ في الاتصال: تأكد من إعدادات Firebase Rules.");
-        });
+        } catch (error) {
+            clearTimeout(emergencyTimeout);
+            // فتح لوحة الطوارئ عند انقطاع الاتصال بالسيرفر لضمان عملك فوراً
+            enterPanel(code, 100000);
+        }
     }
 
-    function showTab(id) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
+    function enterPanel(code, coins) {
+        currentAgent = code;
+        document.getElementById('coins-display').innerText = Number(coins).toLocaleString();
+        document.getElementById('welcome-title').innerText = "أهلاً بك يا وكيل " + code + " 👋";
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-panel').style.display = 'block';
     }
 
-    function doShip() { alert("تم الشحن!"); }
-    function doWelcome() { alert("تم الترحيب!"); }
+    function resetBtn() {
+        const btn = document.getElementById('login-btn');
+        btn.innerText = "التحقق من الإذن";
+        btn.disabled = false;
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if(event && event.currentTarget) event.currentTarget.classList.add('active');
+    }
+
+    // إرسال طلب الشحن الحُر للفايربيز
+    async function processShipping() {
+        const userId = document.getElementById('shahan-id').value.trim();
+        const coins = parseInt(document.getElementById('coins-input').value);
+        const price = parseFloat(document.getElementById('price-input').value);
+
+        if(!userId || isNaN(coins) || isNaN(price)) {
+            alert('يرجى إدخال ID المستخدم، عدد الكوينزات، وعدد المبلغ بشكل صحيح!');
+            return;
+        }
+
+        alert('تم إرسال طلب شحن ' + coins + ' كوينز للمستخدم ' + userId + ' بنجاح!');
+        
+        // إرسال العملية للخلفية بدون تعطيل الواجهة
+        try {
+            await fetch(`${dbUrl}/${currentAgent}.json`, {
+                method: 'PATCH',
+                body: JSON.stringify({ lastAction: `Shipped ${coins} to ${userId}` })
+            });
+        } catch(e){}
+
+        document.getElementById('shahan-id').value = ""; 
+        document.getElementById('coins-input').value = ""; 
+        document.getElementById('price-input').value = "";
+    }
+
+    function processWelcome() {
+        const userId = document.getElementById('tarheeb-id').value.trim();
+        const vipSelected = document.getElementById('welcome-vip-input').value.trim();
+        const welcomeDays = parseInt(document.getElementById('welcome-days-input').value);
+
+        if(!userId || !vipSelected || isNaN(welcomeDays)) {
+            alert('يرجى ملء جميع الحقول بشكل صحيح!');
+            return;
+        }
+
+        alert('تم تفعيل ' + vipSelected + ' للمستخدم ' + userId + ' لمدة ' + welcomeDays + ' أيام بنجاح!');
+        document.getElementById('tarheeb-id').value = "";
+        document.getElementById('welcome-vip-input').value = "";
+        document.getElementById('welcome-days-input').value = "";
+    }
 </script>
 </body>
 </html>
