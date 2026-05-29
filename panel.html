@@ -129,7 +129,18 @@
 <script>
     const dbUrl = "https://deksa-f5b61-default-rtdb.asia-southeast1.firebaseio.com/agents";
     let currentAgent = "";
-    let currentStock = 3700000; // المخزون الافتراضي الذكي المعتمد من قبلك
+    let currentStock = 3700000;
+
+    // دالة فحص واستعادة الرصيد المحفوظ في المتصفح فوراً عند التشغيل
+    function initStock(agentCode) {
+        const savedStock = localStorage.getItem('coinsStock_' + agentCode);
+        if (savedStock !== null) {
+            currentStock = parseInt(savedStock);
+        } else {
+            currentStock = 3700000; // القيمة الافتراضية لأول مرة
+        }
+        document.getElementById('coins-display').innerText = currentStock.toLocaleString();
+    }
 
     function checkAgentLogin() {
         const code = document.getElementById('agent-code-input').value.trim();
@@ -137,16 +148,20 @@
 
         currentAgent = code;
         
+        // استدعاء المخزون المحفوظ محلياً لهذا الوكيل فوراً
+        initStock(code);
+
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-panel').style.display = 'block';
         document.getElementById('welcome-title').innerText = "أهلاً بك يا وكيل " + code + " 👋";
 
-        // محاولة تحديث الرصيد من السيرفر إن كان مسجلاً هناك بالفعل
+        // محاولة جلب آخر تحديث من الفايربيز إن وجد بالخلفية
         fetch(`${dbUrl}/${code}.json`)
         .then(res => res.json())
         .then(data => {
             if(data && data.coinsStock !== undefined) {
                 currentStock = parseInt(data.coinsStock);
+                localStorage.setItem('coinsStock_' + currentAgent, currentStock); // مزامنة الحفظ محلياً
                 document.getElementById('coins-display').innerText = currentStock.toLocaleString();
             }
         })
@@ -162,7 +177,6 @@
         }
     }
 
-    // دالة الشحن الذكية مع الخصم الفوري والمباشر
     function processShipping() {
         const userId = document.getElementById('shahan-id').value.trim();
         const coins = parseInt(document.getElementById('coins-input').value);
@@ -178,13 +192,16 @@
             return;
         }
 
-        // تنفيذ الخصم الفوري محليًا على الواجهة
+        // الخصم الفوري وتحديث واجهة المستخدم
         currentStock -= coins;
         document.getElementById('coins-display').innerText = currentStock.toLocaleString();
 
+        // 🌟 الحفظ الفوري والأبدي داخل ذاكرة الهاتف لكي لا تضيع عند الخروج 🌟
+        localStorage.setItem('coinsStock_' + currentAgent, currentStock);
+
         alert('تم طلب شحن ' + coins + ' كوينز للمخدم ID: ' + userId + ' بنجاح!');
         
-        // تحديث القيمة المخصومة في الفايربيز بالخلفية
+        // تحديث الفايربيز بالخلفية
         fetch(`${dbUrl}/${currentAgent}.json`, {
             method: 'PATCH',
             body: JSON.stringify({ 
