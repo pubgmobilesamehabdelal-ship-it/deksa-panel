@@ -64,7 +64,7 @@
             <label>أدخل رمز الوكيل المعتمد للدخول:</label>
             <input type="password" id="agent-code-input" placeholder="••••••••••••">
         </div>
-        <button class="btn-submit" onclick="checkAgentLogin()">التحقق من الإذن</button>
+        <button class="btn-submit" id="check-btn" onclick="checkAgentLogin()">التحقق من الإذن</button>
     </div>
 
     <!-- لوحة التحكم الرئيسية الكاملة -->
@@ -131,41 +131,74 @@
     let currentAgent = "";
     let currentStock = 3700000;
 
-    // دالة فحص واستعادة الرصيد المحفوظ في المتصفح فوراً عند التشغيل
     function initStock(agentCode) {
         const savedStock = localStorage.getItem('coinsStock_' + agentCode);
         if (savedStock !== null) {
             currentStock = parseInt(savedStock);
         } else {
-            currentStock = 3700000; // القيمة الافتراضية لأول مرة
+            currentStock = 3700000;
         }
         document.getElementById('coins-display').innerText = currentStock.toLocaleString();
     }
 
+    // دالة تحقق صارمة: تمنع أي رمز خاطئ من الدخول نهائياً
     function checkAgentLogin() {
         const code = document.getElementById('agent-code-input').value.trim();
         if (!code) { alert('الرجاء إدخال الرمز!'); return; }
 
-        currentAgent = code;
-        
-        // استدعاء المخزون المحفوظ محلياً لهذا الوكيل فوراً
-        initStock(code);
+        const btn = document.getElementById('check-btn');
+        btn.innerText = "جاري الفحص السريع...";
+        btn.disabled = true;
 
+        // 🌟 التحقق الذكي والمحمي: الرمز الخاص بك يفتح فوراً، والرموز الأخرى يتم فحصها من الفايربيز
+        if (code === "Samehehab777") {
+            enterPanel(code);
+        } else {
+            // فحص إذا كان الرمز مسجلاً كوكيل آخر في قاعدة البيانات
+            fetch(`${dbUrl}/${code}.json`)
+            .then(res => res.json())
+            .then(data => {
+                if (data) {
+                    enterPanel(code);
+                    if(data.coinsStock !== undefined) {
+                        currentStock = parseInt(data.coinsStock);
+                        localStorage.setItem('coinsStock_' + code, currentStock);
+                        document.getElementById('coins-display').innerText = currentStock.toLocaleString();
+                    }
+                } else {
+                    alert('عذراً! رمز الوكيل هذا غير معتمد أو خاطئ واختراقك مكشوف لـ DEKSA ❌');
+                    btn.innerText = "التحقق من الإذن";
+                    btn.disabled = false;
+                }
+            })
+            .catch(() => {
+                // حماية إضافية في حال انقطاع النت: لا تسمح بالدخول العشوائي
+                alert('فشل الاتصال بالأمان! يرجى إدخال رمزك المعتمد الصحيح.');
+                btn.innerText = "التحقق من الإذن";
+                btn.disabled = false;
+            });
+        }
+    }
+
+    function enterPanel(code) {
+        currentAgent = code;
+        initStock(code);
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-panel').style.display = 'block';
         document.getElementById('welcome-title').innerText = "أهلاً بك يا وكيل " + code + " 👋";
-
-        // محاولة جلب آخر تحديث من الفايربيز إن وجد بالخلفية
-        fetch(`${dbUrl}/${code}.json`)
-        .then(res => res.json())
-        .then(data => {
-            if(data && data.coinsStock !== undefined) {
-                currentStock = parseInt(data.coinsStock);
-                localStorage.setItem('coinsStock_' + currentAgent, currentStock); // مزامنة الحفظ محلياً
-                document.getElementById('coins-display').innerText = currentStock.toLocaleString();
-            }
-        })
-        .catch(() => {});
+        
+        // محاولة تحديث رصيد الفايربيز في الخلفية للرمز الخاص بك
+        if(code === "Samehehab777") {
+            fetch(`${dbUrl}/${code}.json`)
+            .then(res => res.json())
+            .then(data => {
+                if(data && data.coinsStock !== undefined) {
+                    currentStock = parseInt(data.coinsStock);
+                    localStorage.setItem('coinsStock_' + code, currentStock);
+                    document.getElementById('coins-display').innerText = currentStock.toLocaleString();
+                }
+            }).catch(()=>{});
+        }
     }
 
     function switchTab(tabId, event) {
@@ -192,16 +225,12 @@
             return;
         }
 
-        // الخصم الفوري وتحديث واجهة المستخدم
         currentStock -= coins;
         document.getElementById('coins-display').innerText = currentStock.toLocaleString();
-
-        // 🌟 الحفظ الفوري والأبدي داخل ذاكرة الهاتف لكي لا تضيع عند الخروج 🌟
         localStorage.setItem('coinsStock_' + currentAgent, currentStock);
 
         alert('تم طلب شحن ' + coins + ' كوينز للمخدم ID: ' + userId + ' بنجاح!');
         
-        // تحديث الفايربيز بالخلفية
         fetch(`${dbUrl}/${currentAgent}.json`, {
             method: 'PATCH',
             body: JSON.stringify({ 
